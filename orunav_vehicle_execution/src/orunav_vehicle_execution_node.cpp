@@ -101,6 +101,7 @@ private:
   ros::ServiceServer service_compute_;
   ros::ServiceServer service_execute_;
 
+  ros::Publisher currentTask_pub_;
   ros::Publisher trajectorychunk_pub_;
   ros::Publisher command_pub_;
   ros::Publisher forkcommand_pub_;
@@ -296,11 +297,14 @@ public:
     service_compute_ = nh_.advertiseService("compute_task", &KMOVehicleExecutionNode::computeTaskCB, this);
     service_execute_ = nh_.advertiseService("execute_task", &KMOVehicleExecutionNode::executeTaskCB, this);
 
-    // Publishers
+    // Publishers    
     trajectorychunk_pub_ = nh_.advertise<orunav_msgs::ControllerTrajectoryChunkVec>("control/controller/trajectories",1000);
     command_pub_ = nh_.advertise<orunav_msgs::ControllerCommand>("control/controller/commands", 1000);
     forkcommand_pub_ = nh_.advertise<orunav_msgs::ForkCommand>("control/fork/command", 1);
     report_pub_ = nh_.advertise<orunav_msgs::RobotReport>("control/report", 1);
+    // I latch the topic so however connects always gets last active task
+    currentTask_pub_ = nh_.advertise<orunav_msgs::Task>("control/controller/task",1000, true);
+
     // Subscribers
     map_sub_ = nh_.subscribe<nav_msgs::OccupancyGrid>("/map",10,&KMOVehicleExecutionNode::process_map, this);
     control_report_sub_ = nh_.subscribe<orunav_msgs::ControllerReport>("control/controller/reports", 10,&KMOVehicleExecutionNode::process_report, this);
@@ -976,6 +980,9 @@ public:
     inputs_mutex_.unlock();
 
     cond_.notify_one();
+
+    // Once task is effectively allocated, send word of it
+    currentTask_pub_.publish(req.task);
     return true;
   }
 
