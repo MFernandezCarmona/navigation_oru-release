@@ -221,6 +221,8 @@ private:
   bool use_update_task_service_;
   bool start_driving_after_recover_;
 
+  std::string execute_task_srv_name_;
+
   bool real_cititruck_;
   bool no_smoothing_;
 public:
@@ -292,6 +294,7 @@ public:
     paramHandle.param<bool>("start_driving_after_recover", start_driving_after_recover_, true);
     paramHandle.param<bool>("real_cititruck", real_cititruck_, false);
     paramHandle.param<bool>("no_smoothing", no_smoothing_, false);
+    paramHandle.param<std::string>("execute_task_srv_name", execute_task_srv_name_, std::string("execute_task"));
     
     // Services
     service_compute_ = nh_.advertiseService("compute_task", &KMOVehicleExecutionNode::computeTaskCB, this);
